@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_empirical_vs_simulated_with_ci(
     edu,
@@ -61,3 +62,46 @@ def plot_empirical_vs_simulated_with_ci(
 
         # now you can close
         plt.close(fig)
+
+
+# # 1) Define a grid of annual labor incomes from 0 to 100 000 DKK
+# income = np.linspace(0, 600_000, 500)
+
+# # 2) Calculate the supplement component:
+# #    income above the supplement threshold is taxed away at the supplement reduction rate
+# supp_threshold = options["model_params"]["supp_threshold"] * 100_000  # convert model units → DKK
+# supp_reduction_rate = options["model_params"]["supp_reduction_rate"]
+# income_over_supp = np.maximum(0.0, income - supp_threshold)
+# supplement = np.maximum(
+#     0.0,
+#     options["model_params"]["oap_max_supplement"] * 100_000  # max supplement in DKK
+#     - supp_reduction_rate * income_over_supp
+# )
+
+# # 3) Calculate the base pension component:
+# #    income above the OAP threshold reduces the base pension at the OAP reduction rate
+# oap_threshold = options["model_params"]["oap_threshold"] * 100_000
+# oap_reduction_rate = options["model_params"]["oap_reduction_rate"]
+# income_over_oap = np.maximum(0.0, income - oap_threshold)
+# base_pension = np.maximum(
+#     0.0,
+#     options["model_params"]["oap_base_amount"] * 100_000  # base amount in DKK
+#     - oap_reduction_rate * income_over_oap
+# )
+
+# # 4) Total annual pension is the sum of base pension and supplement
+# annual_pension = base_pension + supplement
+
+# # 5) Plot the piecewise-linear pension schedule
+# plt.figure(figsize=(8,5))
+# plt.plot(income, annual_pension, lw=2, label="Total Pension")
+# # mark the two thresholds
+# plt.axvline(supp_threshold, color="blue", linestyle="--", label="Supplement Threshold")
+# plt.axvline(oap_threshold, color="green", linestyle="--", label="Base Pension Threshold")
+# plt.xlabel("Annual Labor Income (DKK)")
+# plt.ylabel("Annual Old-Age Pension (DKK)")
+# plt.title("Old-Age Pension Schedule as a Function of Income")
+# plt.legend()
+# plt.grid(True)
+# plt.tight_layout()
+# plt.show()

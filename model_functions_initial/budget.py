@@ -151,7 +151,7 @@ def budget_dcegm(
         + period_pension
         + lumpsum
     ),(interest_factor * savings_end_of_previous_period
-       + unemployment_benefit))
+       + (unemployment_benefit*0.6)))
 
 
 
