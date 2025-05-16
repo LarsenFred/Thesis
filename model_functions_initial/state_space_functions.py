@@ -48,11 +48,11 @@ def sparsity_condition(
     """Determine the sparsity condition for the current state.
 
     """
-    last_period = (options["n_periods"] - 1)
+    final_period = (options["n_periods"] - 1)
 
     if survival == 0:
         return {
-            "period": last_period,
+            "period": final_period,
             "lagged_choice": lagged_choice,
             "survival": survival,
         }
