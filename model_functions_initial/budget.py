@@ -171,6 +171,7 @@ def budget_dcegm(
         "experience": experience,
         "acc_exp": acc_exp,
         "labor_income": labor_income,
+        "resource": resource,
     }
 
     # max(resource, 0.5) to avoid negative consumption - 0 if agent is dead.

@@ -16,11 +16,11 @@ def flow_util(consumption, choice, params, period, options, lagged_choice, survi
     # -------  Zero disutility from working if unemployed
 
     # Age component of disutility
-    age_linear   = jnp.where(age > 55,
-                            params["kappa1"] * (age-55),
+    age_linear   = jnp.where(age > 50,
+                            params["kappa1"] * (age-50),
                             0.0)
-    age_quadratic = jnp.where(age > 55,
-                            params["kappa2"] * (age-55)**2,
+    age_quadratic = jnp.where(age > 50,
+                            params["kappa2"] * (age-50)**2,
                             0.0)
     
     #+ age_linear 
