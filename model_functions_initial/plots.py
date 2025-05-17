@@ -2,11 +2,12 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def plot_empirical_vs_simulated_with_ci(
     edu,
     moments_sim,
-    out_base_dir,     # e.g. "/…/Figurer"
-    out_subfolder,    # e.g. "edu1", "edu2", "edu3"
+    out_base_dir,  # e.g. "/…/Figurer"
+    out_subfolder,  # e.g. "edu1", "edu2", "edu3"
 ):
     """
     Plot empirical vs simulated moments with 95% CI and save to
@@ -17,22 +18,30 @@ def plot_empirical_vs_simulated_with_ci(
     os.makedirs(out_dir, exist_ok=True)
 
     ylims = {
-        "prob_work":      (0,1), "hours_0": (0,1), "hours_1": (0,1),
-        "hours_2":        (0,1), "hours_3": (0,1), "hours_4": (0,1),
-        "work_work":      (0,1), "nowork_nowork": (0,1),
-        "avg_wealth":     (0,30), "avg_experience": (0,50),
+        "prob_work": (0, 1),
+        "hours_0": (0, 1),
+        "hours_1": (0, 1),
+        "hours_2": (0, 1),
+        "hours_3": (0, 1),
+        "hours_4": (0, 1),
+        "work_work": (0, 1),
+        "nowork_nowork": (0, 1),
+        "avg_wealth": (0, 30),
+        "avg_experience": (0, 50),
     }
-    default_ylim = (None,None)
+    default_ylim = (None, None)
     exclude = ["age", "var_wage", "pens", "skew_wage"]
 
     for var in edu.columns:
-        if var in exclude: 
+        if var in exclude:
             continue
 
-        fig, ax = plt.subplots(figsize=(4,4))
+        fig, ax = plt.subplots(figsize=(4, 4))
 
-        ax.plot(edu["age"],        edu[var],        "-", label="Empirical", color="C0")
-        ax.plot(moments_sim["age"], moments_sim[var], "--", label="Simulated", color="C1")
+        ax.plot(edu["age"], edu[var], "-", label="Empirical", color="C0")
+        ax.plot(
+            moments_sim["age"], moments_sim[var], "--", label="Simulated", color="C1"
+        )
 
         low_col, high_col = f"{var}_lower", f"{var}_upper"
         if low_col in moments_sim and high_col in moments_sim:
@@ -40,8 +49,9 @@ def plot_empirical_vs_simulated_with_ci(
                 moments_sim["age"],
                 moments_sim[low_col],
                 moments_sim[high_col],
-                color="C1", alpha=0.2,
-                label="95% CI"
+                color="C1",
+                alpha=0.2,
+                label="95% CI",
             )
 
         ax.grid()

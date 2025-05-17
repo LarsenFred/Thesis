@@ -45,10 +45,10 @@ def crit_func_scipy(
     params["rho"] = theta_array[3]
     params["gamma"] = jnp.array(theta_array[4:8])
     params["kappa2"] = theta_array[8]
-    params["phi"]    = theta_array[9]
-    params["b_scale"]= theta_array[10]
-    params["xi"]     = theta_array[11]
-    params["eta_edu1"]= theta_array[12]
+    params["phi"] = theta_array[9]
+    params["b_scale"] = theta_array[10]
+    params["xi"] = theta_array[11]
+    params["eta_edu1"] = theta_array[12]
 
     # 3) run your sim
     sim_out = sim_func_aux(params)
@@ -59,8 +59,10 @@ def crit_func_scipy(
 
     # 5) drop any nuisance cols and select the ones you care about
     for c in ("pens",):
-        if c in sim_moms:      sim_moms = sim_moms.drop(columns=[c])
-        if c in empirical_moms_df: empirical_moms_df = empirical_moms_df.drop(columns=[c])
+        if c in sim_moms:
+            sim_moms = sim_moms.drop(columns=[c])
+        if c in empirical_moms_df:
+            empirical_moms_df = empirical_moms_df.drop(columns=[c])
     sim_moms = sim_moms[keep_cols]
     emp_moms = empirical_moms_df[keep_cols]
 
@@ -74,15 +76,18 @@ def crit_func_scipy(
 
     crit = 0.0
     for i, w in enumerate(weights):
-        crit += w * np.nansum(diff[:, i]**2)
+        crit += w * np.nansum(diff[:, i] ** 2)
 
     return float(crit)
 
 
 def estimate_msm(
     initial_guess: np.ndarray,
-    params, start_age, hours_map,
-    empirical_moms_df, keep_cols,
+    params,
+    start_age,
+    hours_map,
+    empirical_moms_df,
+    keep_cols,
     **minimize_kwargs
 ):
     """

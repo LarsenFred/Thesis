@@ -17,8 +17,8 @@ dependencies:
   - pandas
   - jax
   - matplotlib
-  - statsmodels.api
-  - os
+  - statsmodels
+  - openpyxl
 
   # Misc
   - black
@@ -42,4 +42,4 @@ dependencies:
 
       # Development dependencies
       - git+https://github.com/OpenSourceEconomics/upper-envelope.git
-      - git+https://github.com/OpenSourceEconomics/dcegm.git@ce19ebbd8eb9b713a7a256b8310ed1bac9351b36#egg=dcegm
+      - git+https://github.com/OpenSourceEconomics/dcegm.git@10ddc4f98040ac4804f2c207c2768f4e72aacfea#egg=dcegm

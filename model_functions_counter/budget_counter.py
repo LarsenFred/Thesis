@@ -29,8 +29,7 @@ def budget_dcegm(
     hours = options["hours"][lagged_choice]
 
     # Survival
-    alive = (survival == 1)
-    death = 1 - alive  # death probability
+    death = survival == 0  # death probability
 
     # if survival == 0, then choice = 0
 
@@ -119,24 +118,32 @@ def budget_dcegm(
 
 
 
-    # ====================================================================
+       # ====================================================================
     # ————---------------------- Resources -—————-------------------------
     # ====================================================================
 
-    unemployment_benefit = 1.47912 # unemployment benefit pr year anno 2023
+    unemployment_benefit = 1.47912
 
     # Total resource available for consumption
-    resource = jnp.where(lagged_choice > 0,(
-        interest_factor * savings_end_of_previous_period
-        + net_labor
-        + period_pension
-        + lumpsum
-    ),(interest_factor * savings_end_of_previous_period
-       + (unemployment_benefit*0.6)))
+    resource = jnp.where(
+        lagged_choice > 0,
+        (
+            interest_factor * savings_end_of_previous_period
+            + net_labor
+            + period_pension
+            + lumpsum
+        ),
+        (
+            interest_factor * savings_end_of_previous_period
+            + (unemployment_benefit * 0.6)
+        ),
+    )
 
+    resource = jnp.where(
+        death, savings_end_of_previous_period, resource
+    )  # if dead, resource is 0.0
 
-
-    #resource = jnp.where(alive, resource_raw, 0.0) # if alive, resource is resource_raw, else 0.0
+    # resource = jnp.where(alive, resource_raw, 0.0) # if alive, resource is resource_raw, else 0.0
 
     # resource = jnp.where(
     # alive,
