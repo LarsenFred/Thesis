@@ -42,6 +42,7 @@ def next_period_experience(period, lagged_choice, experience, options):
 def get_state_specific_feasible_choice_set(
     lagged_choice: int,
     options: Dict,
+    period: int,
 ) -> np.ndarray:
     """Select state-specific feasible choice set such that retirement is absorbing.
 
@@ -66,15 +67,12 @@ def get_state_specific_feasible_choice_set(
             agent's (restricted) feasible choice set in the given state.
 
     """
-    # lagged_choice is a state variable
-    n_choices = options["n_choices"]
-
-    # n_choices = len(options["state_space"]["choices"])
+    age = options["start_age"] + period
 
     # Once the agent choses retirement, she can only choose retirement thereafter.
     # Hence, retirement is an absorbing state.
-    if lagged_choice == 0 and options["start_age"] > options["retirement_age"]:
-        feasible_choice_set = np.array([0])
+    if lagged_choice == 0 and (age >= options["retirement_age"]):
+        feasible_choice_set = jnp.array([0])
     else:
         feasible_choice_set = options["choices"]
 
@@ -109,5 +107,5 @@ def create_state_space_function_dict():
     return {
         "next_period_experience": next_period_experience,
         "sparsity_condition": sparsity_condition,
-        "state_specific_choice_set": get_state_specific_feasible_choice_set,
+        #"state_specific_choice_set": get_state_specific_feasible_choice_set,
     }

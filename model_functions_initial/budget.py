@@ -5,12 +5,13 @@
 import jax.numpy as jnp
 import numpy as np
 
+
 # import oap regression function from first stage estimation
 # import sys
 # sys.path.insert(0,"/Users/frederiklarsen/dcegm/Speciale")
 
 
-def budget_dcegm(
+def budget_dcegm_initial(
     lagged_choice,
     savings_end_of_previous_period,
     income_shock_previous_period,
@@ -59,14 +60,18 @@ def budget_dcegm(
     # ————--------------------- Tax-function —————------------------------
     # ====================================================================
 
-    # Simpple tax-function)
-    tax_rate = jnp.where(
-        labor_income <= options["inc_threshold"],
-        options["tax_base_rate"],
-        options["tax_top_rate"],
-    )
-    net_labor = labor_income * (1 - tax_rate)
+    # 2) inline-tax logic
+    th1 = options["tax_threshold1"]
+    th2 = options["tax_threshold2"]
+    r2  = options["tax_base_rate"]   # e.g. 0.38
+    r3  = options["tax_top_rate"]   # e.g. 0.50
 
+    inc1 = jnp.minimum(labor_income, th1)
+    inc2 = jnp.minimum(jnp.maximum(labor_income - th1, 0.0), th2 - th1)
+    inc3 = jnp.maximum(labor_income - th2, 0.0)
+
+    tax_labor = r2 * inc2 + r3 * inc3      # 0% on inc1
+    net_labor = labor_income - tax_labor
     # ====================================================================
     # ————------------------- Old Age Pension —————-----------------------
     # ====================================================================
@@ -86,25 +91,11 @@ def budget_dcegm(
         L2 = jnp.maximum(0, labor_income - k2)
         return b0 + b1 * labor_income + b2 * L1 + b3 * L2
 
+
     oap_estimate = (
-        predict_oap(labor_income) * 0.6 * (age >= options["retirement_age"])
-    )  # 0.4 is the tax rate
+        jnp.maximum(0, (predict_oap(labor_income) * 0.62) * (age >= options["retirement_age"]))
+    )
 
-    # 1) Determine if agent is retired
-    retirement_age = jnp.where(age >= options["retirement_age"], 1, 0)
-
-    # 2) Calculated income above supplement threshold
-    income_over_supp = jnp.maximum(0.0, labor_income - options["supp_threshold"])
-
-    # 3)Reduction in supplement
-    supp_reduction = options["supp_reduction_rate"] * income_over_supp
-    supplement = jnp.maximum(0.0, options["oap_max_supplement"] - supp_reduction)
-
-    # calculate old age pension - full oap until income reaches threshold and then oap is reduced with with oap_reduction_rate pr unit of income above threshold
-    income_over_oap = jnp.maximum(0.0, labor_income - options["oap_threshold"])
-    oap_reduction = options["oap_reduction_rate"] * income_over_oap
-
-    oap = jnp.maximum(0.0, options["oap_base_amount"] - oap_reduction)
 
     # 4) Samlet årlig pension (grundbeløb + supplement)
     period_pension = oap_estimate
@@ -124,7 +115,7 @@ def budget_dcegm(
     # ====================================================================
 
     # 1) Calculate labor market pension
-    lmpens = params["eta_edu1"] * experience
+    lmpens = params["eta_edu"] * experience
     # 2) Calculate labor market pension after tax
     lmpens = lmpens * (1 - 0.4)
     lumpsum = jnp.where((age == 67), lmpens, 0.0)
@@ -133,7 +124,7 @@ def budget_dcegm(
     # ————---------------------- Resources -—————-------------------------
     # ====================================================================
 
-    unemployment_benefit = 1.47912
+    unemployment_benefit = 1
 
     # Total resource available for consumption
     resource = jnp.where(
@@ -145,8 +136,7 @@ def budget_dcegm(
             + lumpsum
         ),
         (
-            interest_factor * savings_end_of_previous_period
-            + (unemployment_benefit * 0.6)
+            jnp.maximum(unemployment_benefit * 0.62 * (age < options["retirement_age"]), savings_end_of_previous_period*interest_factor)+ period_pension * (lagged_choice == 0)
         ),
     )
 

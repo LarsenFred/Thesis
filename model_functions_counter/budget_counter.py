@@ -11,7 +11,7 @@ import numpy as np
 
 
 
-def budget_dcegm(
+def budget_dcegm_counter_oap(
     lagged_choice,
     savings_end_of_previous_period,
     income_shock_previous_period,
@@ -61,13 +61,18 @@ def budget_dcegm(
     # ————--------------------- Tax-function —————------------------------
     # ====================================================================
 
-    # Simpple tax-function)
-    tax_rate = jnp.where(
-        labor_income <= options["inc_threshold"],
-        options["tax_base_rate"],
-        options["tax_top_rate"],
-    )
-    net_labor = labor_income * (1 - tax_rate)
+    # 2) inline-tax logic
+    th1 = options["tax_threshold1"]
+    th2 = options["tax_threshold2"]
+    r2  = options["tax_base_rate"]   # e.g. 0.38
+    r3  = options["tax_top_rate"]   # e.g. 0.50
+
+    inc1 = jnp.minimum(labor_income, th1)
+    inc2 = jnp.minimum(jnp.maximum(labor_income - th1, 0.0), th2 - th1)
+    inc3 = jnp.maximum(labor_income - th2, 0.0)
+
+    tax_labor = r2 * inc2 + r3 * inc3      # 0% on inc1
+    net_labor = labor_income - tax_labor
 
 
 
@@ -111,7 +116,7 @@ def budget_dcegm(
 
 
     # 1) Calculate labor market pension
-    lmpens = params["eta_edu1"] * experience
+    lmpens = params["eta_edu"] * experience
     # 2) Calculate labor market pension after tax
     lmpens = lmpens * (1 - 0.4)
     lumpsum = jnp.where((age == 67), lmpens, 0.0)
@@ -122,7 +127,7 @@ def budget_dcegm(
     # ————---------------------- Resources -—————-------------------------
     # ====================================================================
 
-    unemployment_benefit = 1.47912
+    unemployment_benefit = 1
 
     # Total resource available for consumption
     resource = jnp.where(
@@ -134,8 +139,7 @@ def budget_dcegm(
             + lumpsum
         ),
         (
-            interest_factor * savings_end_of_previous_period
-            + (unemployment_benefit * 0.6)
+            jnp.maximum(unemployment_benefit * 0.62 * (age < options["retirement_age"]), savings_end_of_previous_period*interest_factor)+ period_pension * (lagged_choice == 0)
         ),
     )
 
