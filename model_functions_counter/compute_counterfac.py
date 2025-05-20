@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 def compute_counterfactual_diff(df_base, df_cf, metrics, age_col='age'):
     """
@@ -107,3 +108,47 @@ def plot_cf_diff_separate(df_diff, metrics, age_col='age', fig_size=6):
         plt.tight_layout()
         plt.show()
 
+
+
+def compute_diff_by_edu(df_init, df_cf, metrics, edu_col="edu", age_col="age"):
+    """
+    Returns a concatenated DataFrame of differences (level & pct) by education group.
+    
+    Parameters
+    ----------
+    df_init : pd.DataFrame
+        Baseline moments. Must contain columns [edu_col, age_col, *metrics].
+    df_cf : pd.DataFrame
+        Counterfactual moments. Same structure as df_init.
+    metrics : list of str
+        Column names to diff, e.g. ["avg_hours","avg_wealth","avg_consumption"].
+    edu_col : str
+        Name of the education label column (default "edu").
+    age_col : str
+        Name of the age column (default "age").
+    
+    Returns
+    -------
+    pd.DataFrame
+        Columns: [edu_col, age_col, for each m in metrics → m_diff, m_pct].
+    """
+    diff_dfs = []
+    edus = df_init[edu_col].unique()
+    
+    for edu in edus:
+        base = df_init[df_init[edu_col] == edu].set_index(age_col)
+        cf   = df_cf  [df_cf  [edu_col] == edu].set_index(age_col)
+        ages = base.index.intersection(cf.index)
+        
+        df_diff = pd.DataFrame({edu_col: edu, age_col: ages})
+        for m in metrics:
+            b = base.loc[ages, m]
+            c = cf.loc[ages, m]
+            diff = c - b
+            pct  = diff.div(b.replace({0: np.nan})) * 100
+            df_diff[f"{m}_diff"] = diff.values
+            df_diff[f"{m}_pct"]  = pct.values
+        
+        diff_dfs.append(df_diff)
+    
+    return pd.concat(diff_dfs, ignore_index=True)
