@@ -111,35 +111,14 @@ def plot_cf_diff_separate(df_diff, metrics, age_col='age', fig_size=6):
 
 
 def compute_diff_by_edu(df_init, df_cf, metrics, edu_col="edu", age_col="age"):
-    """
-    Returns a concatenated DataFrame of differences (level & pct) by education group.
-    
-    Parameters
-    ----------
-    df_init : pd.DataFrame
-        Baseline moments. Must contain columns [edu_col, age_col, *metrics].
-    df_cf : pd.DataFrame
-        Counterfactual moments. Same structure as df_init.
-    metrics : list of str
-        Column names to diff, e.g. ["avg_hours","avg_wealth","avg_consumption"].
-    edu_col : str
-        Name of the education label column (default "edu").
-    age_col : str
-        Name of the age column (default "age").
-    
-    Returns
-    -------
-    pd.DataFrame
-        Columns: [edu_col, age_col, for each m in metrics → m_diff, m_pct].
-    """
     diff_dfs = []
     edus = df_init[edu_col].unique()
-    
+
     for edu in edus:
         base = df_init[df_init[edu_col] == edu].set_index(age_col)
-        cf   = df_cf  [df_cf  [edu_col] == edu].set_index(age_col)
+        cf   = df_cf [df_cf [edu_col] == edu].set_index(age_col)
         ages = base.index.intersection(cf.index)
-        
+
         df_diff = pd.DataFrame({edu_col: edu, age_col: ages})
         for m in metrics:
             b = base.loc[ages, m]
@@ -148,7 +127,135 @@ def compute_diff_by_edu(df_init, df_cf, metrics, edu_col="edu", age_col="age"):
             pct  = diff.div(b.replace({0: np.nan})) * 100
             df_diff[f"{m}_diff"] = diff.values
             df_diff[f"{m}_pct"]  = pct.values
-        
+
         diff_dfs.append(df_diff)
-    
-    return pd.concat(diff_dfs, ignore_index=True)
+
+    return pd.concat(diff_dfs, ignore_index=True) 
+
+def plot_metrics_individual(
+    df_diff,
+    metrics,
+    edus=None,
+    edu_labels=None,
+    metric_labels=None,
+    diff_suffix="_diff",
+    pct_suffix="_pct",
+    figsize=(10, 5),
+    legend_y_offset=-0.15,
+):
+    if edus is None:
+        edus = df_diff['edu'].unique()
+    if edu_labels is None:
+        edu_labels = {edu: edu for edu in edus}
+    if metric_labels is None:
+        metric_labels = {}
+
+    for m in metrics:
+        pretty_metric = metric_labels.get(m, m)
+        fig, (ax_abs, ax_pct) = plt.subplots(1, 2, figsize=figsize)
+
+        for edu in edus:
+            label = edu_labels.get(edu, edu)
+            sub = df_diff[df_diff['edu'] == edu]
+            ax_abs.plot(sub['age'], sub[f'{m}{diff_suffix}'], lw=2, label=label)
+            ax_pct.plot(sub['age'], sub[f'{m}{pct_suffix}'],  lw=2, label=label)
+
+        ax_abs.set_title(f"{pretty_metric} – Absolute Change")
+        ax_abs.set_xlabel("Age")
+        ax_abs.set_ylabel("Δ level")
+        ax_abs.grid(True)
+
+        ax_pct.set_title(f"{pretty_metric} – Percent Change")
+        ax_pct.set_xlabel("Age")
+        ax_pct.set_ylabel("% change")
+        ax_pct.grid(True)
+
+        handles, labels = ax_abs.get_legend_handles_labels()
+        fig.legend(
+            handles,
+            labels,
+            loc="lower center",
+            bbox_to_anchor=(0.5, legend_y_offset),
+            ncol=len(edus),
+            frameon=False,
+            fontsize=9.17,
+        )
+        plt.subplots_adjust(bottom=0.25, wspace=0.3)
+        plt.tight_layout()
+        plt.show()
+
+
+
+def plot_separate_metric_panels(
+    df_diff,
+    metrics,
+    edus=None,
+    edu_labels=None,
+    metric_labels=None,
+    diff_suffix="_diff",
+    pct_suffix="_pct",
+    figsize=(8,4),
+    legend_y_offset=-0.2
+):
+    """
+    For each metric in `metrics`, makes two *separate* figures:
+      1) Absolute change
+      2) Percent change
+    Legend is drawn without a frame, centered below the axis.
+    """
+    if edus is None:
+        edus = df_diff['edu'].unique()
+    if edu_labels is None:
+        edu_labels = {e:e for e in edus}
+    if metric_labels is None:
+        metric_labels = {}
+
+    for m in metrics:
+        pretty = metric_labels.get(m, m)
+
+        # --- Absolute Change Figure ---
+        fig, ax = plt.subplots(figsize=figsize)
+        for e in edus:
+            lbl = edu_labels.get(e, e)
+            sub = df_diff[df_diff['edu']==e]
+            ax.plot(sub['age'], sub[f'{m}{diff_suffix}'], lw=2, label=lbl)
+
+        ax.set_title(f"{pretty} – Absolute Change")
+        ax.set_xlabel("Age")
+        ax.set_ylabel("Δ level")
+        ax.grid(True)
+        # frameless legend below x-axis
+        ax.legend(
+            title="Education",
+            loc='upper center',
+            bbox_to_anchor=(0.5, legend_y_offset),
+            ncol=len(edus),
+            frameon=False
+        )
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.25)
+        plt.show()
+        plt.close(fig)
+
+        # --- Percent Change Figure ---
+        fig, ax = plt.subplots(figsize=figsize)
+        for e in edus:
+            lbl = edu_labels.get(e, e)
+            sub = df_diff[df_diff['edu']==e]
+            ax.plot(sub['age'], sub[f'{m}{pct_suffix}'], lw=2, label=lbl)
+
+        ax.set_title(f"{pretty} – Percent Change")
+        ax.set_xlabel("Age")
+        ax.set_ylabel("% change")
+        ax.grid(True)
+        ax.legend(
+            title="Education",
+            loc='upper center',
+            bbox_to_anchor=(0.5, legend_y_offset),
+            ncol=len(edus),
+            frameon=False
+        )
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.25)
+        plt.show()
+        plt.close(fig)
