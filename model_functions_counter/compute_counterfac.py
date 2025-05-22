@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def compute_counterfactual_diff(df_base, df_cf, metrics, age_col='age'):
     """
@@ -142,6 +143,8 @@ def plot_metrics_individual(
     pct_suffix="_pct",
     figsize=(10, 5),
     legend_y_offset=-0.15,
+    savefig=True,
+    out_dir="figures",
 ):
     if edus is None:
         edus = df_diff['edu'].unique()
@@ -149,6 +152,8 @@ def plot_metrics_individual(
         edu_labels = {edu: edu for edu in edus}
     if metric_labels is None:
         metric_labels = {}
+    if savefig:
+        os.makedirs(out_dir, exist_ok=True)
 
     for m in metrics:
         pretty_metric = metric_labels.get(m, m)
@@ -182,6 +187,16 @@ def plot_metrics_individual(
         )
         plt.subplots_adjust(bottom=0.25, wspace=0.3)
         plt.tight_layout()
+        if savefig:
+            fname = f"{m}_change.png"
+            path  = os.path.join(out_dir, fname)
+        fig.savefig(
+            path,
+            dpi=150,
+            bbox_inches='tight',   # <- ensure legend isn’t clipped
+            pad_inches=0.1         # <- small padding around the figure
+        )
+        print(f"Saved {path}")
         plt.show()
 
 
