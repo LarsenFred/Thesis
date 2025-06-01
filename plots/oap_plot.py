@@ -40,8 +40,8 @@ predicted_pension = predict_oap(income)
 # ——————————————————————————————————————————————
 # 5) plot
 plt.figure(figsize=(8,5))
-plt.plot(income, annual_pension,    lw=2, label="True Old Age Pension")
-plt.plot(income, predicted_pension, lw=2, linestyle="--", label="Estimated Old Age Pension")
+plt.plot(income, annual_pension,    lw=2, label="Old Age Pension")
+# plt.plot(income, predicted_pension, lw=2, linestyle="--", label="Estimated Old Age Pension")
 
 # vertical lines at kinks
 plt.axvline(supp_threshold, color="green", linestyle=":", label="Supplement Threshold")
@@ -49,9 +49,9 @@ plt.axvline(oap_threshold,  color="purple", linestyle=":", label="Pension Thresh
 
 plt.xlabel("Annual Labor Income (DKK)")
 plt.ylabel("Annual Old‐Age Pension (DKK)")
-plt.title("True vs. Estimated Pension Schedule")
+plt.title("Danish Old Age Pension Schedule")
 plt.legend(loc="best")
 plt.grid(True)
 plt.tight_layout()
-plt.savefig("/Users/frederiklarsen/Library/Mobile Documents/com~apple~CloudDocs/KU/Speciale/figurer/oap_spline_estimate.png", dpi=300)
+plt.savefig("/Users/frederiklarsen/Library/Mobile Documents/com~apple~CloudDocs/KU/Speciale/figurer/oap_spline_estimate_69.png", dpi=300)
 plt.show()
